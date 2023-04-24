@@ -16,7 +16,7 @@ class MLP(torch.nn.Module):
         self.layers.append(torch.nn.Linear(input_dim, hidden_dim))
         for _ in range(num_hidden_layers - 1):
             self.layers.append(torch.nn.Linear(hidden_dim, hidden_dim))
-        self.layers.append(torch.nn.Linear(hidden_dim, output_dim))
+        self.layers.append(torch.nn.Linear(hidden_dim, output_dim, bias=False)) # No bias for last layer.
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         for i, layer in enumerate(self.layers):
             x = layer(x)
