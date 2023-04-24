@@ -97,4 +97,3 @@ def generate_probability_heatmap(dim: int=50, num_simulations: int=1000):
 if __name__ == "__main__":
     # Run the experiment
     table = generate_probability_heatmap(dim=20, num_simulations=100)
-    print(table)
