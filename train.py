@@ -1,21 +1,39 @@
 import torch
 from tqdm import tqdm
+from typing import Tuple
+from metrics import jacobian
 
-def train_model(model, optimizer, loss_fn, X, y, num_epochs):
-    act_changes = torch.zeros(num_epochs)
-    train_loss = -torch.ones(num_epochs)
-    A = torch.zeros(X.shape)
-    for epoch in tqdm(range(num_epochs)):
+def train_model(model: torch.nn.Module,
+                optimizer: torch.optim.Optimizer,
+                loss_fn: torch.nn.Module,
+                X: torch.Tensor,
+                y: torch.Tensor,
+                num_epochs: int) -> Tuple[torch.nn.Module, torch.Tensor, torch.Tensor]:
+    
+    # Metrics to track.
+    act_changes = []
+    train_loss = []
+    jacobian_ranks = []
+    A = []
+
+    for _ in tqdm(range(num_epochs)):
+        # Backward pass.
         optimizer.zero_grad()
-        preds, A_new = model(X)
-        if not torch.equal(A, A_new):
-          A = A_new
-          act_changes[epoch] = 1
+        preds = model(X)
+        A_new = model.activations
         loss = loss_fn(preds, y)
         loss.backward()
-        train_loss[epoch] = loss
         optimizer.step()
-    preds,_ = model(X)
-    loss = loss_fn(preds, y)
-    print("Finished training, final training loss: " + str(loss.item()))
-    return model, act_changes, train_loss
+
+        # Record metrics.
+        train_loss.append(loss.item())
+        J = jacobian(model, X)
+        jacobian_ranks.append(torch.linalg.matrix_rank(J).item())
+        if len(A) != len(A_new) or not all(torch.equal(a, b) for a, b in zip(A, A_new)):
+            # Record a change in the activation pattern.
+            A = A_new
+            act_changes.append(1)
+        else:
+            act_changes.append(0)
+    logged_metrics = {'act_changes': act_changes, 'train_loss': train_loss, 'jacobian_ranks': jacobian_ranks}
+    return model, logged_metrics

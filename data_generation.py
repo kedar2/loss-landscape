@@ -12,7 +12,8 @@ class RandomPolynomialMapping:
         self.coeffs = np.random.uniform(coeff_lb, coeff_ub, degree + 1)
         self.degree = degree
     def __call__(self, X):
-        return np.sum(np.polyval(self.coeffs, X), axis=1)
+        y = np.sum(np.polyval(self.coeffs, X), axis=1).reshape(-1, 1)
+        return y
     def generate_gaussian_data(self, d: int, n: int) -> Tuple[torch.Tensor, torch.Tensor]:
         """
         Generates a dataset (X, y) where X is Gaussian and y is the polynomial mapping of X.
@@ -32,9 +33,3 @@ class RandomPolynomialMapping:
         X = torch.from_numpy(X).float()
         y = torch.from_numpy(y).float()
         return X, y
-    
-if __name__ == "__main__":
-    poly = RandomPolynomialMapping(-1, 1, 2)
-    X, y = poly.generate_gaussian_data(10, 1000)
-    print("Shape of X: ", X.shape)
-    print("Shape of y: ", y.shape)

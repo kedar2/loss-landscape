@@ -1,7 +1,6 @@
 import torch
 from torch.func import jacrev, functional_call
 
-
 def jacobian(model: torch.nn.Module, x: torch.tensor) -> torch.Tensor:
     """
     Compute the Jacobian of a model w.r.t. its (vectorized) weights.
