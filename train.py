@@ -15,6 +15,10 @@ def train_model(model: torch.nn.Module,
     train_loss = []
     jacobian_ranks = []
     A = []
+    J = jacobian(model, X)
+    jacobian_ranks.append(torch.linalg.matrix_rank(J).item())
+
+    print("Starting training.")
 
     for _ in tqdm(range(num_epochs)):
         # Backward pass.
@@ -35,5 +39,7 @@ def train_model(model: torch.nn.Module,
             act_changes.append(1)
         else:
             act_changes.append(0)
+
+
     logged_metrics = {'act_changes': act_changes, 'train_loss': train_loss, 'jacobian_ranks': jacobian_ranks}
     return model, logged_metrics
