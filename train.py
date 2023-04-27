@@ -8,7 +8,7 @@ def train_model(model: torch.nn.Module,
                 loss_fn: torch.nn.Module,
                 X: torch.Tensor,
                 y: torch.Tensor,
-                num_epochs: int) -> Tuple[torch.nn.Module, torch.Tensor, torch.Tensor]:
+                num_epochs: int) -> Tuple[torch.nn.Module, dict]:
     
     # Metrics to track.
     act_changes = []

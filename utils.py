@@ -29,4 +29,5 @@ def plot_dict_values(d):
         ax.set_title(key)
         ax.set_xlabel('Epoch')
         ax.set_ylabel(key)
+        plt.savefig('results/' + key + '.png')
         plt.show()

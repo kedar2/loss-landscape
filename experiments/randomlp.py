@@ -4,7 +4,6 @@ Experiments on the feasibility of random linear programs.
 
 import numpy as np
 from scipy.optimize import linprog
-import matplotlib
 from matplotlib import pyplot as plt
 
 def randomlp(m: int, n: int):
@@ -94,6 +93,6 @@ def generate_probability_heatmap(dim: int=50, num_simulations: int=1000):
 
     return table
 
-if __name__ == "__main__":
+def run(dim: int=50, num_simulations: int=1000):
     # Run the experiment
-    table = generate_probability_heatmap(dim=20, num_simulations=100)
+    generate_probability_heatmap(dim=20, num_simulations=100)

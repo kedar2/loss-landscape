@@ -14,9 +14,9 @@ class RandomPolynomialMapping:
     def __call__(self, X):
         y = np.sum(np.polyval(self.coeffs, X), axis=1).reshape(-1, 1)
         return y
-    def generate_gaussian_data(self, d: int, n: int) -> Tuple[torch.Tensor, torch.Tensor]:
+    def generate_random_data(self, d: int, n: int) -> Tuple[torch.Tensor, torch.Tensor]:
         """
-        Generates a dataset (X, y) where X is Gaussian and y is the polynomial mapping of X.
+        Generates a dataset (X, y) where X is random and y is the polynomial mapping of X.
         
         Args:
             d (int): Dimension of the input.
@@ -27,7 +27,7 @@ class RandomPolynomialMapping:
             y (torch.Tensor): Output data.
         """
 
-        X = np.random.normal(size=(n, d))
+        X = (np.random.rand(n, d) * 2 - 1) * 2
         y = self(X)
 
         X = torch.from_numpy(X).float()
