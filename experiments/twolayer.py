@@ -40,8 +40,8 @@ def main():
     parser.add_argument('--num_data', type=int, default=500)
     args = parser.parse_args()
     logged_metrics = run(**vars(args))
-    utils.export_dict_to_csv(logged_metrics, 'results/twolayer.csv')
-    utils.plot_dict_values(logged_metrics)
+    utils.export_dict_to_csv(logged_metrics, '../results/twolayer.csv')
+    utils.plot_dict_values(logged_metrics, directory='../results/')
 
 if __name__ == '__main__':
     main()
