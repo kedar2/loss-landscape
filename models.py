@@ -18,14 +18,14 @@ class MLP(torch.nn.Module):
         self.layers.append(torch.nn.Linear(input_dim, hidden_dim))
         for _ in range(num_hidden_layers - 1):
             self.layers.append(torch.nn.Linear(hidden_dim, hidden_dim))
-        self.layers.append(torch.nn.Linear(hidden_dim, output_dim, bias=False)) # No bias for last layer.
+        self.last_layer = torch.nn.Parameter(torch.randn(hidden_dim, output_dim)) # The last layer is frozen.
         self.activations = []
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         self.activations = []
         for i, layer in enumerate(self.layers):
             x = layer(x)
-            if i < len(self.layers) - 1:
-                x = torch.nn.functional.relu(x)
-                self.activations.append(x > 0) # Record the activation pattern.
+            x = torch.nn.functional.relu(x)
+            self.activations.append(x > 0) # Record the activation pattern.
+        x = x @ self.last_layer
         return x
