@@ -1,5 +1,4 @@
 import matplotlib.pyplot as plt
-import matplotlib
 import csv
 
 def export_dict_to_csv(d, filename):
