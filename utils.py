@@ -49,7 +49,8 @@ def generate_heatmap(x_range: list, y_range: list, f: callable, xlabel: str='x',
     """
 
     f_values = np.zeros((len(y_range), len(x_range)))
-    for i, x in tqdm(enumerate(x_range)):
+    print("Generating heatmap...")
+    for i, x in tqdm(enumerate(x_range), total=len(x_range)):
         for j, y in enumerate(y_range):
             f_values[j, i] = f(x, y)
     ax = sns.heatmap(f_values, xticklabels=x_range, yticklabels=y_range, cmap='viridis')
