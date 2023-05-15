@@ -9,14 +9,23 @@ if os.path.basename(os.getcwd()) == 'experiments':
 
 import numpy as np
 from matplotlib import pyplot as plt
+import seaborn as sns
 import torch
 import metrics
 import models
+from utils import generate_heatmap
 
 def random_binary_matrix_invertibility(n: int=100, num_trials: int=1000) -> float:
     """
     Given a matrix of size n x n with entries sampled from a Bernoulli distribution
     with parameter 0.5, compute the probability that the matrix is invertible.
+
+    Args:
+        n (int): The dimension of the matrix.
+        num_trials (int): The number of trials to simulate.
+    
+    Returns:
+        (float): The probability that the matrix is invertible (i.e. has full rank
     """
     num_invertible = 0
     for _ in range(num_trials):
@@ -31,10 +40,13 @@ def prob_jacobian_full_rank(n: int=100, input_dim: int=100, hidden_dim: int=12, 
     with respect to the parameters at a random initialization.
 
     Args:
-        n: The number of samples in the dataset.
-        input_dim: The dimension of the input data.
-        hidden_dim: The dimension of the hidden layer.
-        num_trials: The number of trials to simulate.
+        n (int): The number of samples in the dataset.
+        input_dim (int): The dimension of the input data.
+        hidden_dim (int): The dimension of the hidden layer.
+        num_trials (int): The number of trials to simulate.
+    
+    Returns:
+        (float): The probability that the Jacobian is of full rank.
     """
 
     num_full_rank = 0
@@ -46,14 +58,18 @@ def prob_jacobian_full_rank(n: int=100, input_dim: int=100, hidden_dim: int=12, 
             num_full_rank += 1
     return num_full_rank / num_trials
 
-
-
-
-
+def experiment_input_dim_equals_n():
+    """
+    Vary the number of samples in the dataset and plot the probability that the Jacobian is of full rank.
+    """
+    n_values = list(range(10, 110, 10))
+    hidden_dim_values = list(range(1, 21, 1))
+    prob_full_rank = lambda n, hidden_dim: prob_jacobian_full_rank(n=n, input_dim=n, hidden_dim=hidden_dim)
+    generate_heatmap(n_values, hidden_dim_values, prob_full_rank, xlabel='n', ylabel='hidden_dim', title='Probability of Full Rank Jacobian')
 
 def main():
-    p = prob_jacobian_full_rank(input_dim=100, hidden_dim=25, num_trials=100)
+    p = prob_jacobian_full_rank(n=500, input_dim=500, hidden_dim=25)
     print(p)
 
 if __name__ == "__main__":
-    main()
+    experiment_input_dim_equals_n()
