@@ -14,6 +14,7 @@ import torch
 import metrics
 import models
 from utils import generate_heatmap
+from math import ceil
 
 def random_binary_matrix_invertibility(n: int=100, num_trials: int=1000) -> float:
     """
@@ -58,18 +59,46 @@ def prob_jacobian_full_rank(n: int=100, input_dim: int=100, hidden_dim: int=12, 
             num_full_rank += 1
     return num_full_rank / num_trials
 
-def experiment_input_dim_equals_n():
+def experiment_varying_input_dim(ratio=0.5):
     """
     Vary the number of samples in the dataset and plot the probability that the Jacobian is of full rank.
+    The input dimension is proportional to the number of samples.
+
+    Args:
+        ratio (int): The ratio between the input dimension and the number of samples.
     """
-    n_values = list(range(10, 110, 10))
-    hidden_dim_values = list(range(1, 21, 1))
-    prob_full_rank = lambda n, hidden_dim: prob_jacobian_full_rank(n=n, input_dim=n, hidden_dim=hidden_dim)
+    n_values = list(range(10, 210, 20))
+    hidden_dim_values = list(range(1, 18, 1))
+    prob_full_rank = lambda n, hidden_dim: prob_jacobian_full_rank(n=n, input_dim=ceil(n * ratio), hidden_dim=hidden_dim)
     generate_heatmap(n_values, hidden_dim_values, prob_full_rank, xlabel='n', ylabel='hidden_dim', title='Probability of Full Rank Jacobian')
 
+def experiment_input_dim_constant(input_dim: int=1):
+    """
+    Vary the number of samples in the dataset and plot the probability that the Jacobian is of full rank.
+    The input dimension is kept constant.
+
+    Args:
+        input_dim (int): The input dimension.
+    """
+    n_values = list(range(10, 60, 5))
+    hidden_dim_values = list(range(10, 410, 40))
+    prob_full_rank = lambda n, hidden_dim: prob_jacobian_full_rank(n=n, input_dim=input_dim, hidden_dim=hidden_dim)
+    generate_heatmap(n_values, hidden_dim_values, prob_full_rank, xlabel='n', ylabel='hidden_dim', title='Probability of Full Rank Jacobian')
+
+
 def main():
-    p = prob_jacobian_full_rank(n=500, input_dim=500, hidden_dim=25)
-    print(p)
+    import argparse
+    parser = argparse.ArgumentParser(description='Experiments on sampling activation regions and determining probability of full rank.')
+    parser.add_argument('--experiment', type=str, default='varying_input_dim', help='The experiment to run.')
+    parser.add_argument('--ratio', type=float, default=0.5, help='The ratio between the input dimension and the number of samples.') # only used for experiment='varying_input_dim'
+    parser.add_argument('--input_dim', type=int, default=100, help='The input dimension.')
+    args = parser.parse_args()
+    if args.experiment == 'varying_input_dim':
+        experiment_varying_input_dim(ratio=args.ratio)
+    elif args.experiment == 'input_dim_constant':
+        experiment_input_dim_constant(input_dim=args.input_dim)
+    else:
+        raise ValueError('Invalid experiment name.')
 
 if __name__ == "__main__":
-    experiment_input_dim_equals_n()
+    main()
