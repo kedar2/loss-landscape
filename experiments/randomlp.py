@@ -5,6 +5,7 @@ Experiments on the feasibility of random linear programs.
 import numpy as np
 from scipy.optimize import linprog
 from matplotlib import pyplot as plt
+import seaborn as sns
 
 def randomlp(m: int, n: int):
     """
@@ -83,16 +84,24 @@ def generate_probability_heatmap(dim: int=50, num_simulations: int=1000):
     table = generate_probability_table(dim, num_simulations=num_simulations)
 
     # Plot the heatmap
-    fig, ax = plt.subplots()
-    im = ax.imshow(table, cmap="hot")
-    ax.set_xlabel("Number of variables")
-    ax.set_ylabel("Number of constraints")
-    ax.set_title("Probability of feasibility")
-    fig.tight_layout()
+    ax = sns.heatmap(table)
+    ax.invert_yaxis()
+    plt.xlabel("Number of variables")
+    plt.ylabel("Number of constraints")
+    plt.title("Probability that a random linear program is feasible")
     plt.show()
 
     return table
 
-def run(dim: int=50, num_simulations: int=1000):
+def run():
+    import argparse
+    parser = argparse.ArgumentParser(description="Experiments on the feasibility of random linear programs.")
+    parser.add_argument("--dim", type=int, default=50, help="max number of constraints and variables")
+    parser.add_argument("--num_simulations", type=int, default=100, help="number of simulations to run")
+    args = parser.parse_args()
+
     # Run the experiment
-    generate_probability_heatmap(dim=20, num_simulations=100)
+    generate_probability_heatmap(dim=args.dim, num_simulations=args.num_simulations)
+
+if __name__ == "__main__":
+    run()
