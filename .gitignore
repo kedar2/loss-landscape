@@ -128,3 +128,7 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+
+# custom
+jupyter*notebooks/err
+jupyter*notebooks/out

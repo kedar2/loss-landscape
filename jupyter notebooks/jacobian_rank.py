@@ -61,13 +61,22 @@ class PolynomialRegression:
 
 
 def get_gaussian_data_np(d0, data_size, target_fn):
+    x = np.random.normal(size=(data_size, d0))
+    y = target_fn(x)
+    return x, y
+
+def get_uniform_data_np(d0, data_size, target_fn):
     x = np.random.uniform(-1., 1., size=(data_size, d0))
-#     x = np.random.normal(size=(data_size, d0))
     y = target_fn(x)
     return x, y
 
 def get_gaussian_data(d0, data_size, target_fn):
     x = torch.tensor(np.random.normal(size=(data_size, d0)), dtype=torch.float)
+    y = target_fn(x)
+    return x, y
+
+def get_uniform_data(d0, data_size, target_fn):
+    x = torch.tensor(np.random.uniform(-1., 1., size=(data_size, d0)), dtype=torch.float)
     y = target_fn(x)
     return x, y
 
@@ -214,13 +223,6 @@ def plot_colormap(data, filename, d0, set_cbar=True):
         plt.yticks(list(range(0, len(d1_arr), step)) + [len(d1_arr) - 1],
                    [d for di, d in enumerate(d1_arr) if di % step == 0] + [d1_arr[-1]])
 
-        # if set_cbar:
-        #     cp = plt.imshow(data, cmap=colormap, origin='lower', interpolation='nearest', vmax=100)#, vmin=0,
-        #                     #vmax=100)
-        #     cbar = fig.colorbar(cp)#, ticks=[0, 20, 40, 60, 80, 100])
-        # else:
-        #     cp = plt.imshow(data, cmap=colormap, origin='lower', interpolation='nearest', vmax=100)
-        #     cbar = fig.colorbar(cp)
         if np.all(data[0][0] == data):
             cp = plt.imshow(data, cmap=colormap, origin='lower', interpolation='nearest', vmin=90, vmax=100)
         else:
@@ -238,14 +240,14 @@ if __name__ == "__main__":
     rank = comm.Get_rank()
 
     if rank == 0:
-    	# D0 = 1
-    	# TODOL used random labels
-    	DATA = 'polynomial regression' # 'teacher-student'
-    	# DATA = 'teacher-student'
-    	SOLVER = 'quadratic'#'linear regression'
-    	RUNS_NUM = 10
+        start_time = datetime.now()
 
-    	d0_arr = [1, 2, 5, 10, 50]
+    	DATA = 'polynomial regression' # 'teacher-student'
+        DATA_DISTR = 'uniform' # 'gaussian''
+    	SOLVER = 'quadratic'#'linear regression'
+    	RUNS_NUM = 100
+
+    	d0_arr = [1]#[1, 2, 5, 10, 50]
     	d1_arr = [25 + 25 * (i) for i in range(40)]
     	data_size_arr = [10 + 10 * (i) for i in range(40)]
 
@@ -271,17 +273,31 @@ if __name__ == "__main__":
     	            print(f'!!! data_size: {data_size}')
 
     	            if DATA == 'polynomial regression':
-    	                x, y = get_gaussian_data_np(
-    	                    d0=d0,
-    	                    data_size=data_size,
-    	                    target_fn=PolynomialRegression(coef_lb=-1., coef_ub=1., degree=2, d0=d0)
-    	                )
+                        if DATA_DISTR == 'uniform':
+        	                x, y = get_uniform_data_np(
+        	                    d0=d0,
+        	                    data_size=data_size,
+        	                    target_fn=PolynomialRegression(coef_lb=-1., coef_ub=1., degree=2, d0=d0)
+        	                )
+                        elif DATA_DISTR == 'gaussian':
+                            x, y = get_gaussian_data_np(
+                                d0=d0,
+                                data_size=data_size,
+                                target_fn=PolynomialRegression(coef_lb=-1., coef_ub=1., degree=2, d0=d0)
+                            )
+                        else:
+                            raise Exception(f'Wrong data distribution name \"{DATA_DISTR}\"')
     	                x = torch.tensor(x, dtype=torch.float)
     	                y = torch.tensor(y, dtype=torch.float)
     	            elif DATA == 'teacher-student':
     	                teacher_net = TwoLayerNet(d0=d0, d1=d1, d2=1, freeze=True)
     	                teacher_net.train(False)
-    	                x, y = get_gaussian_data(d0=d0, data_size=data_size, target_fn=teacher_net)
+                         if DATA_DISTR == 'uniform':
+                            x, y = get_uniform_data(d0=d0, data_size=data_size, target_fn=teacher_net)
+                        elif DATA_DISTR == 'gaussian':
+                            x, y = get_gaussian_data(d0=d0, data_size=data_size, target_fn=teacher_net)
+                        else:
+                            raise Exception(f'Wrong data distribution name \"{DATA_DISTR}\"')
     	            else:
     	                raise Exception(f'Wrong data name \"{DATA}\"')
 
@@ -302,15 +318,7 @@ if __name__ == "__main__":
     	                pattern_hash = hash(tuple(get_A(model, x).reshape(-1)))
     	                if pattern_hash not in original_pattern_arr:
     	                    original_pattern_arr.append(pattern_hash)
-    	#                     (_, zero_loss_arr[run_id], same_pattern_arr[run_id],
-    	#                      region_dim_arr[run_id], lr_pattern) = contains_min(model, x, y, SOLVER)
-    	#                     lr_pattern_arr.append(hash(tuple(lr_pattern.reshape(-1))))
-
     	                    A_rank = get_A_rank(model, x)
-    	#                     print(f'd0: {d0}, d1:{d1}, data_size: {data_size}, A_rank: {A_rank},'
-    	#                           +f' min(d1 + d1 * d0, data_size): {min(d1 + d1 * d0, data_size)}'
-    	#                          + f' A_rank / min(d1 + d1 * d0, data_size) * 100: {
-    	#                                         A_rank / min(d1 + d1 * d0, data_size) * 100}')
     	                    A_rank_arr.append(A_rank / min(d1 + d1 * d0, data_size) * 100)
     	                    full_rank_arr.append(A_rank == min(d1 + d1 * d0, data_size))
     	                    all_rank_arr.append(A_rank)
@@ -341,7 +349,6 @@ if __name__ == "__main__":
     	        total_average_rank.append(d1_average_rank)
 
     	    total_zero_loss = np.asarray(total_zero_loss)
-    	    # print(f'total_zero_loss:\n{total_zero_loss.shape}')
     	    print(f'total_zero_loss:\n{total_zero_loss}')
     	    print(f'total_same_pattern:\n{total_same_pattern}')
     	    print(f'total_region_dim:\n{total_region_dim}')
@@ -350,7 +357,10 @@ if __name__ == "__main__":
     	    print(f'total_all_rank:\n{total_all_rank}')
     	    print(f'total_average_rank:\n{total_average_rank}')
 
-    	#     plot_colormap(total_zero_loss, filename='global_percentage', d0=d0)
     	    plot_colormap(total_A_rank, filename='full_rank_percentage', d0=d0)
-    	#     plot_colormap(total_full_rank, filename='full_rank_out_of_all', d0=d0)
-    	#     plot_colormap(total_average_rank, filename='average_rank', d0=d0, set_cbar=False)
+
+        total_time = datetime.now() - start_time
+        hours = int(total_time.seconds / 3600)
+        minutes = int(total_time.seconds / 60 - hours * 60)
+        seconds = int(total_time.seconds - hours * 3600 - minutes * 60)
+        print(f'Elapsed time: {hours}h {minutes}min {int(seconds)}s')
