@@ -242,43 +242,43 @@ if __name__ == "__main__":
     if rank == 0:
         start_time = datetime.now()
 
-    	DATA = 'polynomial regression' # 'teacher-student'
+        DATA = 'polynomial regression' # 'teacher-student'
         DATA_DISTR = 'uniform' # 'gaussian''
-    	SOLVER = 'quadratic'#'linear regression'
-    	RUNS_NUM = 100
+        SOLVER = 'quadratic'#'linear regression'
+        RUNS_NUM = 100
 
-    	d0_arr = [1]#[1, 2, 5, 10, 50]
-    	d1_arr = [25 + 25 * (i) for i in range(40)]
-    	data_size_arr = [10 + 10 * (i) for i in range(40)]
+        d0_arr = [1]#[1, 2, 5, 10, 50]
+        d1_arr = [25 + 25 * (i) for i in range(40)]
+        data_size_arr = [10 + 10 * (i) for i in range(40)]
 
-    	for d0 in d0_arr:
-    	    total_zero_loss = []
-    	    total_same_pattern = []
-    	    total_region_dim = []
-    	    total_A_rank = []
-    	    total_full_rank = []
-    	    total_all_rank = []
-    	    total_average_rank = []
+        for d0 in d0_arr:
+            total_zero_loss = []
+            total_same_pattern = []
+            total_region_dim = []
+            total_A_rank = []
+            total_full_rank = []
+            total_all_rank = []
+            total_average_rank = []
 
-    	    for d1 in d1_arr:
-    	        print(f'!!! d1: {d1}')
-    	        d1_zero_loss = []
-    	        d1_same_pattern = []
-    	        d1_region_dim = []
-    	        d1_A_rank = []
-    	        d1_full_rank = []
-    	        d1_all_rank = []
-    	        d1_average_rank = []
-    	        for data_size in data_size_arr:
-    	            print(f'!!! data_size: {data_size}')
+            for d1 in d1_arr:
+                print(f'!!! d1: {d1}')
+                d1_zero_loss = []
+                d1_same_pattern = []
+                d1_region_dim = []
+                d1_A_rank = []
+                d1_full_rank = []
+                d1_all_rank = []
+                d1_average_rank = []
+                for data_size in data_size_arr:
+                    print(f'!!! data_size: {data_size}')
 
-    	            if DATA == 'polynomial regression':
+                    if DATA == 'polynomial regression':
                         if DATA_DISTR == 'uniform':
-        	                x, y = get_uniform_data_np(
-        	                    d0=d0,
-        	                    data_size=data_size,
-        	                    target_fn=PolynomialRegression(coef_lb=-1., coef_ub=1., degree=2, d0=d0)
-        	                )
+                            x, y = get_uniform_data_np(
+                                d0=d0,
+                                data_size=data_size,
+                                target_fn=PolynomialRegression(coef_lb=-1., coef_ub=1., degree=2, d0=d0)
+                            )
                         elif DATA_DISTR == 'gaussian':
                             x, y = get_gaussian_data_np(
                                 d0=d0,
@@ -287,77 +287,77 @@ if __name__ == "__main__":
                             )
                         else:
                             raise Exception(f'Wrong data distribution name \"{DATA_DISTR}\"')
-    	                x = torch.tensor(x, dtype=torch.float)
-    	                y = torch.tensor(y, dtype=torch.float)
-    	            elif DATA == 'teacher-student':
-    	                teacher_net = TwoLayerNet(d0=d0, d1=d1, d2=1, freeze=True)
-    	                teacher_net.train(False)
+                        x = torch.tensor(x, dtype=torch.float)
+                        y = torch.tensor(y, dtype=torch.float)
+                    elif DATA == 'teacher-student':
+                        teacher_net = TwoLayerNet(d0=d0, d1=d1, d2=1, freeze=True)
+                        teacher_net.train(False)
                          if DATA_DISTR == 'uniform':
                             x, y = get_uniform_data(d0=d0, data_size=data_size, target_fn=teacher_net)
                         elif DATA_DISTR == 'gaussian':
                             x, y = get_gaussian_data(d0=d0, data_size=data_size, target_fn=teacher_net)
                         else:
                             raise Exception(f'Wrong data distribution name \"{DATA_DISTR}\"')
-    	            else:
-    	                raise Exception(f'Wrong data name \"{DATA}\"')
+                    else:
+                        raise Exception(f'Wrong data name \"{DATA}\"')
 
-    	            original_pattern_arr = []
-    	            same_pattern_arr = np.asarray([False for _ in range(RUNS_NUM)])
-    	            region_dim_arr = np.zeros(RUNS_NUM)
-    	            zero_loss_arr = np.asarray([False for _ in range(RUNS_NUM)])
-    	            lr_pattern_arr = []
-    	            A_rank_arr = []
-    	            full_rank_arr = []
-    	            all_rank_arr = []
+                    original_pattern_arr = []
+                    same_pattern_arr = np.asarray([False for _ in range(RUNS_NUM)])
+                    region_dim_arr = np.zeros(RUNS_NUM)
+                    zero_loss_arr = np.asarray([False for _ in range(RUNS_NUM)])
+                    lr_pattern_arr = []
+                    A_rank_arr = []
+                    full_rank_arr = []
+                    all_rank_arr = []
 
-    	            run_id = 0
-    	            while len(original_pattern_arr) < RUNS_NUM:
-    	                if (run_id + 1) % 100 == 0:
-    	                    print(f'=== Run {run_id + 1}/{RUNS_NUM} ===')
-    	                model = TwoLayerNet(d0=d0, d1=d1, d2=1)
-    	                pattern_hash = hash(tuple(get_A(model, x).reshape(-1)))
-    	                if pattern_hash not in original_pattern_arr:
-    	                    original_pattern_arr.append(pattern_hash)
-    	                    A_rank = get_A_rank(model, x)
-    	                    A_rank_arr.append(A_rank / min(d1 + d1 * d0, data_size) * 100)
-    	                    full_rank_arr.append(A_rank == min(d1 + d1 * d0, data_size))
-    	                    all_rank_arr.append(A_rank)
-    	                    run_id +=1
+                    run_id = 0
+                    while len(original_pattern_arr) < RUNS_NUM:
+                        if (run_id + 1) % 100 == 0:
+                            print(f'=== Run {run_id + 1}/{RUNS_NUM} ===')
+                        model = TwoLayerNet(d0=d0, d1=d1, d2=1)
+                        pattern_hash = hash(tuple(get_A(model, x).reshape(-1)))
+                        if pattern_hash not in original_pattern_arr:
+                            original_pattern_arr.append(pattern_hash)
+                            A_rank = get_A_rank(model, x)
+                            A_rank_arr.append(A_rank / min(d1 + d1 * d0, data_size) * 100)
+                            full_rank_arr.append(A_rank == min(d1 + d1 * d0, data_size))
+                            all_rank_arr.append(A_rank)
+                            run_id +=1
 
-    	            print(f'Number of global minima: {np.sum(zero_loss_arr)}/{RUNS_NUM}')
-    	            print(f'Number of same patterns: {np.sum(same_pattern_arr)}/{RUNS_NUM}')
-    	            print(f'Unique lr patterns: {np.unique(lr_pattern_arr).shape[0]}/{RUNS_NUM}')
-    	            print(f'Average region dimension: {np.mean(region_dim_arr)}')
-    	            print()
+                    print(f'Number of global minima: {np.sum(zero_loss_arr)}/{RUNS_NUM}')
+                    print(f'Number of same patterns: {np.sum(same_pattern_arr)}/{RUNS_NUM}')
+                    print(f'Unique lr patterns: {np.unique(lr_pattern_arr).shape[0]}/{RUNS_NUM}')
+                    print(f'Average region dimension: {np.mean(region_dim_arr)}')
+                    print()
 
-    	            print(f'full rank arr: {full_rank_arr}')
+                    print(f'full rank arr: {full_rank_arr}')
 
-    	            d1_zero_loss.append(np.mean(zero_loss_arr) * 100)
-    	            d1_same_pattern.append(np.mean(same_pattern_arr) * 100)
-    	            d1_region_dim.append(np.mean(region_dim_arr))
-    	            d1_A_rank.append(np.mean(A_rank_arr))
-    	            d1_full_rank.append(np.mean(full_rank_arr) * 100)
-    	            d1_all_rank.append(all_rank_arr)
-    	            d1_average_rank.append(np.mean(all_rank_arr))
+                    d1_zero_loss.append(np.mean(zero_loss_arr) * 100)
+                    d1_same_pattern.append(np.mean(same_pattern_arr) * 100)
+                    d1_region_dim.append(np.mean(region_dim_arr))
+                    d1_A_rank.append(np.mean(A_rank_arr))
+                    d1_full_rank.append(np.mean(full_rank_arr) * 100)
+                    d1_all_rank.append(all_rank_arr)
+                    d1_average_rank.append(np.mean(all_rank_arr))
 
-    	        total_zero_loss.append(d1_zero_loss)
-    	        total_same_pattern.append(d1_same_pattern)
-    	        total_region_dim.append(d1_region_dim)
-    	        total_A_rank.append(d1_A_rank)
-    	        total_full_rank.append(d1_full_rank)
-    	        total_all_rank.append(all_rank_arr)
-    	        total_average_rank.append(d1_average_rank)
+                total_zero_loss.append(d1_zero_loss)
+                total_same_pattern.append(d1_same_pattern)
+                total_region_dim.append(d1_region_dim)
+                total_A_rank.append(d1_A_rank)
+                total_full_rank.append(d1_full_rank)
+                total_all_rank.append(all_rank_arr)
+                total_average_rank.append(d1_average_rank)
 
-    	    total_zero_loss = np.asarray(total_zero_loss)
-    	    print(f'total_zero_loss:\n{total_zero_loss}')
-    	    print(f'total_same_pattern:\n{total_same_pattern}')
-    	    print(f'total_region_dim:\n{total_region_dim}')
-    	    print(f'total_A_rank:\n{total_A_rank}')
-    	    print(f'total_full_rank:\n{total_full_rank}')
-    	    print(f'total_all_rank:\n{total_all_rank}')
-    	    print(f'total_average_rank:\n{total_average_rank}')
+            total_zero_loss = np.asarray(total_zero_loss)
+            print(f'total_zero_loss:\n{total_zero_loss}')
+            print(f'total_same_pattern:\n{total_same_pattern}')
+            print(f'total_region_dim:\n{total_region_dim}')
+            print(f'total_A_rank:\n{total_A_rank}')
+            print(f'total_full_rank:\n{total_full_rank}')
+            print(f'total_all_rank:\n{total_all_rank}')
+            print(f'total_average_rank:\n{total_average_rank}')
 
-    	    plot_colormap(total_A_rank, filename='full_rank_percentage', d0=d0)
+            plot_colormap(total_A_rank, filename='full_rank_percentage', d0=d0)
 
         total_time = datetime.now() - start_time
         hours = int(total_time.seconds / 3600)
