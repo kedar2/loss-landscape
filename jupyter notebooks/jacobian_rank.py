@@ -245,7 +245,7 @@ if __name__ == "__main__":
         SOLVER = 'quadratic'#'linear regression'
         RUNS_NUM = 20
 
-        d0_arr = [2]#[1, 2, 5, 10, 50]
+        d0_arr = [5]#[1, 2, 5, 10, 50]
         d1_arr = [25 + 25 * (i) for i in range(40)]
         data_size_arr = [10 + 10 * (i) for i in range(40)]
 
