@@ -199,7 +199,7 @@ def contains_min(model, x, y, solver='linear regression'):
 
     return loss, zero_loss, same_pattern, region_dim, new_pattern
 
-def plot_colormap(data, filename, d0, set_cbar=True):
+def plot_colormap(data, filename, d0, runs_num, set_cbar=True):
     colormap_arr = ['RdYlBu_r']
     step = 10
 
@@ -231,7 +231,7 @@ def plot_colormap(data, filename, d0, set_cbar=True):
         cbar.ax.tick_params(labelsize=36)
         plt.tight_layout()
 
-        plt.savefig(f'images/random_local_or_global/{timestamp}_d0_{d0}_{filename}_{colormap}.png')
+        plt.savefig(f'images/random_local_or_global/{timestamp}_d0_{d0}_{filename}_r{runs_num}.png')
 
 if __name__ == "__main__":
     num_processes = comm.Get_size()
@@ -243,9 +243,9 @@ if __name__ == "__main__":
         DATA = 'polynomial regression' # 'teacher-student'
         DATA_DISTR = 'uniform' # 'gaussian''
         SOLVER = 'quadratic'#'linear regression'
-        RUNS_NUM = 100
+        RUNS_NUM = 20
 
-        d0_arr = [50]#[1, 2, 5, 10, 50]
+        d0_arr = [2]#[1, 2, 5, 10, 50]
         d1_arr = [25 + 25 * (i) for i in range(40)]
         data_size_arr = [10 + 10 * (i) for i in range(40)]
 
@@ -353,7 +353,7 @@ if __name__ == "__main__":
             print(f'total_all_rank:\n{total_all_rank}')
             print(f'total_average_rank:\n{total_average_rank}')
 
-            plot_colormap(total_A_rank, filename='full_rank_percentage', d0=d0)
+            plot_colormap(total_A_rank, filename='full_rank_percentage', d0=d0, runs_num=RUNS_NUM)
 
         total_time = datetime.now() - start_time
         hours = int(total_time.seconds / 3600)
