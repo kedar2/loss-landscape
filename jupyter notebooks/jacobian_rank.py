@@ -83,11 +83,10 @@ def get_uniform_data(d0, data_size, target_fn):
 def get_A(model, x):
     return model.layers[0](x).detach().numpy() > 0
 
-def get_A_rank(model, x):
+def get_jacobian_rank(model, x):
     d0 = x.size()[1]
     if d0 == 1:
         pattern = model.layers[0](x).detach().numpy() > 0
-        # return np.linalg.matrix_rank(pattern)
         return np.linalg.matrix_rank(pattern.astype(np.float64))
 
     jacobian = []
@@ -97,7 +96,6 @@ def get_A_rank(model, x):
         jacobian.append(torch.cat(grads).numpy())
 
     jacobian = np.asarray(jacobian)
-    # return np.linalg.matrix_rank(jacobian)
     return np.linalg.matrix_rank(jacobian.astype(np.float64))
 
 def contains_min(model, x, y, solver='linear regression'):
@@ -247,7 +245,7 @@ if __name__ == "__main__":
         SOLVER = 'quadratic'#'linear regression'
         RUNS_NUM = 100
 
-        d0_arr = [1]#[1, 2, 5, 10, 50]
+        d0_arr = [2]#[1, 2, 5, 10, 50]
         d1_arr = [25 + 25 * (i) for i in range(40)]
         data_size_arr = [10 + 10 * (i) for i in range(40)]
 
@@ -312,13 +310,11 @@ if __name__ == "__main__":
 
                     run_id = 0
                     while len(original_pattern_arr) < RUNS_NUM:
-                        if (run_id + 1) % 100 == 0:
-                            print(f'=== Run {run_id + 1}/{RUNS_NUM} ===')
                         model = TwoLayerNet(d0=d0, d1=d1, d2=1)
                         pattern_hash = hash(tuple(get_A(model, x).reshape(-1)))
                         if pattern_hash not in original_pattern_arr:
                             original_pattern_arr.append(pattern_hash)
-                            A_rank = get_A_rank(model, x)
+                            A_rank = get_jacobian_rank(model, x)
                             A_rank_arr.append(A_rank / min(d1 + d1 * d0, data_size) * 100)
                             full_rank_arr.append(A_rank == min(d1 + d1 * d0, data_size))
                             all_rank_arr.append(A_rank)
