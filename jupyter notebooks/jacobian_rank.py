@@ -243,11 +243,11 @@ if __name__ == "__main__":
     	DATA = 'polynomial regression' # 'teacher-student'
     	# DATA = 'teacher-student'
     	SOLVER = 'quadratic'#'linear regression'
-    	RUNS_NUM = 2
+    	RUNS_NUM = 10
 
-    	d0_arr = [10]#[1, 2, 5, 10, 50]
-    	d1_arr = [25 + 25 * (i) for i in range(4)]
-    	data_size_arr = [10 + 10 * (i) for i in range(4)]
+    	d0_arr = [1, 2, 5, 10, 50]
+    	d1_arr = [25 + 25 * (i) for i in range(40)]
+    	data_size_arr = [10 + 10 * (i) for i in range(40)]
 
     	for d0 in d0_arr:
     	    total_zero_loss = []
