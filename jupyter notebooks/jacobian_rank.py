@@ -6,12 +6,16 @@ import sys
 # from cvxopt import matrix, solvers
 # solvers.options['show_progress'] = False
 import matplotlib.pyplot as plt
+from mpi4py import MPI
 import numpy as np
 import scipy
 import torch
 import torch.nn as nn
 
 np.set_printoptions(threshold=sys.maxsize)
+
+comm = MPI.COMM_WORLD
+
 
 class TwoLayerNet(nn.Module):
 
@@ -210,12 +214,14 @@ def plot_colormap(data, filename, d0, set_cbar=True):
         plt.yticks(list(range(0, len(d1_arr), step)) + [len(d1_arr) - 1],
                    [d for di, d in enumerate(d1_arr) if di % step == 0] + [d1_arr[-1]])
 
-        if set_cbar:
-            cp = plt.imshow(data, cmap=colormap, origin='lower', interpolation='nearest', vmax=100)#, vmin=0,
-                            #vmax=100)
-            cbar = fig.colorbar(cp)#, ticks=[0, 20, 40, 60, 80, 100])
-        else:
-            cp = plt.imshow(data, cmap=colormap, origin='lower', interpolation='nearest')
+        # if set_cbar:
+        #     cp = plt.imshow(data, cmap=colormap, origin='lower', interpolation='nearest', vmax=100)#, vmin=0,
+        #                     #vmax=100)
+        #     cbar = fig.colorbar(cp)#, ticks=[0, 20, 40, 60, 80, 100])
+        # else:
+        #     cp = plt.imshow(data, cmap=colormap, origin='lower', interpolation='nearest', vmax=100)
+        #     cbar = fig.colorbar(cp)
+        cp = plt.imshow(data, cmap=colormap, origin='lower', interpolation='nearest', vmax=100)
             cbar = fig.colorbar(cp)
         cbar.ax.tick_params(length=6, width=2)
 
@@ -225,119 +231,123 @@ def plot_colormap(data, filename, d0, set_cbar=True):
         plt.savefig(f'images/random_local_or_global/{timestamp}_d0_{d0}_{filename}_{colormap}.png')
 
 if __name__ == "__main__":
-	# D0 = 1
-	# TODOL used random labels
-	DATA = 'polynomial regression' # 'teacher-student'
-	# DATA = 'teacher-student'
-	SOLVER = 'quadratic'#'linear regression'
-	RUNS_NUM = 2
+    num_processes = comm.Get_size()
+    rank = comm.Get_rank()
 
-	d0_arr = [1, 2, 5, 10]#[1, 2, 5, 10, 50]
-	d1_arr = [25 + 25 * (i) for i in range(40)]
-	data_size_arr = [10 + 10 * (i) for i in range(40)]
+    if rank == 0:
+    	# D0 = 1
+    	# TODOL used random labels
+    	DATA = 'polynomial regression' # 'teacher-student'
+    	# DATA = 'teacher-student'
+    	SOLVER = 'quadratic'#'linear regression'
+    	RUNS_NUM = 2
 
-	for d0 in d0_arr:
-	    total_zero_loss = []
-	    total_same_pattern = []
-	    total_region_dim = []
-	    total_A_rank = []
-	    total_full_rank = []
-	    total_all_rank = []
-	    total_average_rank = []
+    	d0_arr = [1, 2, 5, 10]#[1, 2, 5, 10, 50]
+    	d1_arr = [25 + 25 * (i) for i in range(40)]
+    	data_size_arr = [10 + 10 * (i) for i in range(40)]
 
-	    for d1 in d1_arr:
-	        print(f'!!! d1: {d1}')
-	        d1_zero_loss = []
-	        d1_same_pattern = []
-	        d1_region_dim = []
-	        d1_A_rank = []
-	        d1_full_rank = []
-	        d1_all_rank = []
-	        d1_average_rank = []
-	        for data_size in data_size_arr:
-	            print(f'!!! data_size: {data_size}')
+    	for d0 in d0_arr:
+    	    total_zero_loss = []
+    	    total_same_pattern = []
+    	    total_region_dim = []
+    	    total_A_rank = []
+    	    total_full_rank = []
+    	    total_all_rank = []
+    	    total_average_rank = []
 
-	            if DATA == 'polynomial regression':
-	                x, y = get_gaussian_data_np(
-	                    d0=d0,
-	                    data_size=data_size,
-	                    target_fn=PolynomialRegression(coef_lb=-1., coef_ub=1., degree=2, d0=d0)
-	                )
-	                x = torch.tensor(x, dtype=torch.float)
-	                y = torch.tensor(y, dtype=torch.float)
-	            elif DATA == 'teacher-student':
-	                teacher_net = TwoLayerNet(d0=d0, d1=d1, d2=1, freeze=True)
-	                teacher_net.train(False)
-	                x, y = get_gaussian_data(d0=d0, data_size=data_size, target_fn=teacher_net)
-	            else:
-	                raise Exception(f'Wrong data name \"{DATA}\"')
+    	    for d1 in d1_arr:
+    	        print(f'!!! d1: {d1}')
+    	        d1_zero_loss = []
+    	        d1_same_pattern = []
+    	        d1_region_dim = []
+    	        d1_A_rank = []
+    	        d1_full_rank = []
+    	        d1_all_rank = []
+    	        d1_average_rank = []
+    	        for data_size in data_size_arr:
+    	            print(f'!!! data_size: {data_size}')
 
-	            original_pattern_arr = []
-	            same_pattern_arr = np.asarray([False for _ in range(RUNS_NUM)])
-	            region_dim_arr = np.zeros(RUNS_NUM)
-	            zero_loss_arr = np.asarray([False for _ in range(RUNS_NUM)])
-	            lr_pattern_arr = []
-	            A_rank_arr = []
-	            full_rank_arr = []
-	            all_rank_arr = []
+    	            if DATA == 'polynomial regression':
+    	                x, y = get_gaussian_data_np(
+    	                    d0=d0,
+    	                    data_size=data_size,
+    	                    target_fn=PolynomialRegression(coef_lb=-1., coef_ub=1., degree=2, d0=d0)
+    	                )
+    	                x = torch.tensor(x, dtype=torch.float)
+    	                y = torch.tensor(y, dtype=torch.float)
+    	            elif DATA == 'teacher-student':
+    	                teacher_net = TwoLayerNet(d0=d0, d1=d1, d2=1, freeze=True)
+    	                teacher_net.train(False)
+    	                x, y = get_gaussian_data(d0=d0, data_size=data_size, target_fn=teacher_net)
+    	            else:
+    	                raise Exception(f'Wrong data name \"{DATA}\"')
 
-	            run_id = 0
-	            while len(original_pattern_arr) < RUNS_NUM:
-	                if (run_id + 1) % 100 == 0:
-	                    print(f'=== Run {run_id + 1}/{RUNS_NUM} ===')
-	                model = TwoLayerNet(d0=d0, d1=d1, d2=1)
-	                pattern_hash = hash(tuple(get_A(model, x).reshape(-1)))
-	                if pattern_hash not in original_pattern_arr:
-	                    original_pattern_arr.append(pattern_hash)
-	#                     (_, zero_loss_arr[run_id], same_pattern_arr[run_id],
-	#                      region_dim_arr[run_id], lr_pattern) = contains_min(model, x, y, SOLVER)
-	#                     lr_pattern_arr.append(hash(tuple(lr_pattern.reshape(-1))))
+    	            original_pattern_arr = []
+    	            same_pattern_arr = np.asarray([False for _ in range(RUNS_NUM)])
+    	            region_dim_arr = np.zeros(RUNS_NUM)
+    	            zero_loss_arr = np.asarray([False for _ in range(RUNS_NUM)])
+    	            lr_pattern_arr = []
+    	            A_rank_arr = []
+    	            full_rank_arr = []
+    	            all_rank_arr = []
 
-	                    A_rank = get_A_rank(model, x)
-	#                     print(f'd0: {d0}, d1:{d1}, data_size: {data_size}, A_rank: {A_rank},'
-	#                           +f' min(d1 + d1 * d0, data_size): {min(d1 + d1 * d0, data_size)}'
-	#                          + f' A_rank / min(d1 + d1 * d0, data_size) * 100: {
-	#                                         A_rank / min(d1 + d1 * d0, data_size) * 100}')
-	                    A_rank_arr.append(A_rank / min(d1 + d1 * d0, data_size) * 100)
-	                    full_rank_arr.append(A_rank == min(d1 + d1 * d0, data_size))
-	                    all_rank_arr.append(A_rank)
-	                    run_id +=1
+    	            run_id = 0
+    	            while len(original_pattern_arr) < RUNS_NUM:
+    	                if (run_id + 1) % 100 == 0:
+    	                    print(f'=== Run {run_id + 1}/{RUNS_NUM} ===')
+    	                model = TwoLayerNet(d0=d0, d1=d1, d2=1)
+    	                pattern_hash = hash(tuple(get_A(model, x).reshape(-1)))
+    	                if pattern_hash not in original_pattern_arr:
+    	                    original_pattern_arr.append(pattern_hash)
+    	#                     (_, zero_loss_arr[run_id], same_pattern_arr[run_id],
+    	#                      region_dim_arr[run_id], lr_pattern) = contains_min(model, x, y, SOLVER)
+    	#                     lr_pattern_arr.append(hash(tuple(lr_pattern.reshape(-1))))
 
-	            print(f'Number of global minima: {np.sum(zero_loss_arr)}/{RUNS_NUM}')
-	            print(f'Number of same patterns: {np.sum(same_pattern_arr)}/{RUNS_NUM}')
-	            print(f'Unique lr patterns: {np.unique(lr_pattern_arr).shape[0]}/{RUNS_NUM}')
-	            print(f'Average region dimension: {np.mean(region_dim_arr)}')
-	            print()
+    	                    A_rank = get_A_rank(model, x)
+    	#                     print(f'd0: {d0}, d1:{d1}, data_size: {data_size}, A_rank: {A_rank},'
+    	#                           +f' min(d1 + d1 * d0, data_size): {min(d1 + d1 * d0, data_size)}'
+    	#                          + f' A_rank / min(d1 + d1 * d0, data_size) * 100: {
+    	#                                         A_rank / min(d1 + d1 * d0, data_size) * 100}')
+    	                    A_rank_arr.append(A_rank / min(d1 + d1 * d0, data_size) * 100)
+    	                    full_rank_arr.append(A_rank == min(d1 + d1 * d0, data_size))
+    	                    all_rank_arr.append(A_rank)
+    	                    run_id +=1
 
-	            print(f'full rank arr: {full_rank_arr}')
+    	            print(f'Number of global minima: {np.sum(zero_loss_arr)}/{RUNS_NUM}')
+    	            print(f'Number of same patterns: {np.sum(same_pattern_arr)}/{RUNS_NUM}')
+    	            print(f'Unique lr patterns: {np.unique(lr_pattern_arr).shape[0]}/{RUNS_NUM}')
+    	            print(f'Average region dimension: {np.mean(region_dim_arr)}')
+    	            print()
 
-	            d1_zero_loss.append(np.mean(zero_loss_arr) * 100)
-	            d1_same_pattern.append(np.mean(same_pattern_arr) * 100)
-	            d1_region_dim.append(np.mean(region_dim_arr))
-	            d1_A_rank.append(np.mean(A_rank_arr))
-	            d1_full_rank.append(np.mean(full_rank_arr) * 100)
-	            d1_all_rank.append(all_rank_arr)
-	            d1_average_rank.append(np.mean(all_rank_arr))
+    	            print(f'full rank arr: {full_rank_arr}')
 
-	        total_zero_loss.append(d1_zero_loss)
-	        total_same_pattern.append(d1_same_pattern)
-	        total_region_dim.append(d1_region_dim)
-	        total_A_rank.append(d1_A_rank)
-	        total_full_rank.append(d1_full_rank)
-	        total_all_rank.append(all_rank_arr)
-	        total_average_rank.append(d1_average_rank)
+    	            d1_zero_loss.append(np.mean(zero_loss_arr) * 100)
+    	            d1_same_pattern.append(np.mean(same_pattern_arr) * 100)
+    	            d1_region_dim.append(np.mean(region_dim_arr))
+    	            d1_A_rank.append(np.mean(A_rank_arr))
+    	            d1_full_rank.append(np.mean(full_rank_arr) * 100)
+    	            d1_all_rank.append(all_rank_arr)
+    	            d1_average_rank.append(np.mean(all_rank_arr))
 
-	    total_zero_loss = np.asarray(total_zero_loss)
-	    # print(f'total_zero_loss:\n{total_zero_loss.shape}')
-	    print(f'total_zero_loss:\n{total_zero_loss}')
-	    print(f'total_same_pattern:\n{total_same_pattern}')
-	    print(f'total_region_dim:\n{total_region_dim}')
-	    print(f'total_A_rank:\n{total_A_rank}')
-	    print(f'total_full_rank:\n{total_full_rank}')
-	    print(f'total_all_rank:\n{total_all_rank}')
-	    print(f'total_average_rank:\n{total_average_rank}')
+    	        total_zero_loss.append(d1_zero_loss)
+    	        total_same_pattern.append(d1_same_pattern)
+    	        total_region_dim.append(d1_region_dim)
+    	        total_A_rank.append(d1_A_rank)
+    	        total_full_rank.append(d1_full_rank)
+    	        total_all_rank.append(all_rank_arr)
+    	        total_average_rank.append(d1_average_rank)
 
-	#     plot_colormap(total_zero_loss, filename='global_percentage', d0=d0)
-	    plot_colormap(total_A_rank, filename='full_rank_percentage', d0=d0)
-	#     plot_colormap(total_full_rank, filename='full_rank_out_of_all', d0=d0)
-	#     plot_colormap(total_average_rank, filename='average_rank', d0=d0, set_cbar=False)
+    	    total_zero_loss = np.asarray(total_zero_loss)
+    	    # print(f'total_zero_loss:\n{total_zero_loss.shape}')
+    	    print(f'total_zero_loss:\n{total_zero_loss}')
+    	    print(f'total_same_pattern:\n{total_same_pattern}')
+    	    print(f'total_region_dim:\n{total_region_dim}')
+    	    print(f'total_A_rank:\n{total_A_rank}')
+    	    print(f'total_full_rank:\n{total_full_rank}')
+    	    print(f'total_all_rank:\n{total_all_rank}')
+    	    print(f'total_average_rank:\n{total_average_rank}')
+
+    	#     plot_colormap(total_zero_loss, filename='global_percentage', d0=d0)
+    	    plot_colormap(total_A_rank, filename='full_rank_percentage', d0=d0)
+    	#     plot_colormap(total_full_rank, filename='full_rank_out_of_all', d0=d0)
+    	#     plot_colormap(total_average_rank, filename='average_rank', d0=d0, set_cbar=False)
