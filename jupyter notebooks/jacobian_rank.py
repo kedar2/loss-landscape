@@ -261,7 +261,7 @@ if __name__ == "__main__":
 	                x, y = get_gaussian_data_np(
 	                    d0=d0,
 	                    data_size=data_size,
-	                    target_fn=PolynomialRegression(coef_lb=-1., coef_ub=1., degree=2, d0=D0)
+	                    target_fn=PolynomialRegression(coef_lb=-1., coef_ub=1., degree=2, d0=d0)
 	                )
 	                x = torch.tensor(x, dtype=torch.float)
 	                y = torch.tensor(y, dtype=torch.float)
