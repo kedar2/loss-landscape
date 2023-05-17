@@ -8,8 +8,6 @@ if os.path.basename(os.getcwd()) == 'experiments':
     sys.path.append('..')
 
 import numpy as np
-from matplotlib import pyplot as plt
-import seaborn as sns
 import torch
 import metrics
 import models
