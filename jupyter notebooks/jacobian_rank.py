@@ -222,7 +222,7 @@ def plot_colormap(data, filename, d0, set_cbar=True):
         #     cp = plt.imshow(data, cmap=colormap, origin='lower', interpolation='nearest', vmax=100)
         #     cbar = fig.colorbar(cp)
         cp = plt.imshow(data, cmap=colormap, origin='lower', interpolation='nearest', vmax=100)
-            cbar = fig.colorbar(cp)
+        cbar = fig.colorbar(cp)
         cbar.ax.tick_params(length=6, width=2)
 
         cbar.ax.tick_params(labelsize=36)
