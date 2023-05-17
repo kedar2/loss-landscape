@@ -292,7 +292,7 @@ if __name__ == "__main__":
                     elif DATA == 'teacher-student':
                         teacher_net = TwoLayerNet(d0=d0, d1=d1, d2=1, freeze=True)
                         teacher_net.train(False)
-                         if DATA_DISTR == 'uniform':
+                        if DATA_DISTR == 'uniform':
                             x, y = get_uniform_data(d0=d0, data_size=data_size, target_fn=teacher_net)
                         elif DATA_DISTR == 'gaussian':
                             x, y = get_gaussian_data(d0=d0, data_size=data_size, target_fn=teacher_net)
