@@ -13,6 +13,7 @@ import metrics
 import models
 from utils import generate_heatmap
 from math import ceil
+from typing import Optional
 
 def random_binary_matrix_invertibility(n: int=100, num_trials: int=1000) -> float:
     """
@@ -51,37 +52,39 @@ def prob_jacobian_full_rank(n: int=100, input_dim: int=100, hidden_dim: int=12, 
     num_full_rank = 0
     for _ in range(num_trials):
         model = models.MLP(input_dim=input_dim, hidden_dim=hidden_dim, output_dim=1, num_hidden_layers=1)
-        X = torch.randn(n, input_dim)
+        X = torch.rand(n, input_dim)
         J = metrics.jacobian(model, X)
         if torch.linalg.matrix_rank(J).item() == n:
             num_full_rank += 1
     return num_full_rank / num_trials
 
-def experiment_varying_input_dim(ratio=0.5):
+def experiment_varying_input_dim(ratio=0.5, filename: Optional[str]=None):
     """
     Vary the number of samples in the dataset and plot the probability that the Jacobian is of full rank.
     The input dimension is proportional to the number of samples.
 
     Args:
         ratio (int): The ratio between the input dimension and the number of samples.
+        filename (str): The filename to save the results.
     """
-    n_values = list(range(10, 110, 10))
-    hidden_dim_values = list(range(1, 21, 1))
+    n_values = list(range(10, 210, 20))
+    hidden_dim_values = list(range(1, 16, 1))
     prob_full_rank = lambda n, hidden_dim: prob_jacobian_full_rank(n=n, input_dim=ceil(n * ratio), hidden_dim=hidden_dim)
-    generate_heatmap(n_values, hidden_dim_values, prob_full_rank, xlabel='Dataset size', ylabel='Network width', title='Probability of Full Rank Jacobian')
+    generate_heatmap(n_values, hidden_dim_values, prob_full_rank, xlabel='Dataset size', ylabel='Network width', title='', filename=filename)
 
-def experiment_input_dim_constant(input_dim: int=1):
+def experiment_input_dim_constant(input_dim: int=1, filename: Optional[str]=None):
     """
     Vary the number of samples in the dataset and plot the probability that the Jacobian is of full rank.
     The input dimension is kept constant.
 
     Args:
         input_dim (int): The input dimension.
+        filename (str): The filename to save the results.
     """
     n_values = list(range(10, 110, 10))
-    hidden_dim_values = list(range(10, 110, 10))
+    hidden_dim_values = list(range(30, 310, 30))
     prob_full_rank = lambda n, hidden_dim: prob_jacobian_full_rank(n=n, input_dim=input_dim, hidden_dim=hidden_dim)
-    generate_heatmap(n_values, hidden_dim_values, prob_full_rank, xlabel='Dataset size', ylabel='Network width', title='')
+    generate_heatmap(n_values, hidden_dim_values, prob_full_rank, xlabel='Dataset size', ylabel='Network width', title='', filename=filename)
 
 
 def main():
@@ -90,11 +93,12 @@ def main():
     parser.add_argument('--experiment', type=str, default='varying_input_dim', help='The experiment to run.')
     parser.add_argument('--ratio', type=float, default=0.5, help='The ratio between the input dimension and the number of samples.') # only used for experiment='varying_input_dim'
     parser.add_argument('--input_dim', type=int, default=100, help='The input dimension.')
+    parser.add_argument('--filename', type=str, default=None, help='The filename to save the results.')
     args = parser.parse_args()
     if args.experiment == 'varying_input_dim':
-        experiment_varying_input_dim(ratio=args.ratio)
+        experiment_varying_input_dim(ratio=args.ratio, filename=args.filename)
     elif args.experiment == 'input_dim_constant':
-        experiment_input_dim_constant(input_dim=args.input_dim)
+        experiment_input_dim_constant(input_dim=args.input_dim, filename=args.filename)
     else:
         raise ValueError('Invalid experiment name.')
 
