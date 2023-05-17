@@ -8,8 +8,6 @@ if os.path.basename(os.getcwd()) == 'experiments':
     sys.path.append('..')
 
 import numpy as np
-from matplotlib import pyplot as plt
-import seaborn as sns
 import torch
 import metrics
 import models
@@ -67,10 +65,10 @@ def experiment_varying_input_dim(ratio=0.5):
     Args:
         ratio (int): The ratio between the input dimension and the number of samples.
     """
-    n_values = list(range(10, 210, 20))
-    hidden_dim_values = list(range(1, 18, 1))
+    n_values = list(range(10, 110, 10))
+    hidden_dim_values = list(range(1, 21, 1))
     prob_full_rank = lambda n, hidden_dim: prob_jacobian_full_rank(n=n, input_dim=ceil(n * ratio), hidden_dim=hidden_dim)
-    generate_heatmap(n_values, hidden_dim_values, prob_full_rank, xlabel='n', ylabel='hidden_dim', title='Probability of Full Rank Jacobian')
+    generate_heatmap(n_values, hidden_dim_values, prob_full_rank, xlabel='Dataset size', ylabel='Network width', title='Probability of Full Rank Jacobian')
 
 def experiment_input_dim_constant(input_dim: int=1):
     """
@@ -80,10 +78,10 @@ def experiment_input_dim_constant(input_dim: int=1):
     Args:
         input_dim (int): The input dimension.
     """
-    n_values = list(range(10, 60, 5))
-    hidden_dim_values = list(range(10, 410, 40))
+    n_values = list(range(10, 110, 10))
+    hidden_dim_values = list(range(10, 110, 10))
     prob_full_rank = lambda n, hidden_dim: prob_jacobian_full_rank(n=n, input_dim=input_dim, hidden_dim=hidden_dim)
-    generate_heatmap(n_values, hidden_dim_values, prob_full_rank, xlabel='n', ylabel='hidden_dim', title='Probability of Full Rank Jacobian')
+    generate_heatmap(n_values, hidden_dim_values, prob_full_rank, xlabel='Dataset size', ylabel='Network width', title='')
 
 
 def main():
