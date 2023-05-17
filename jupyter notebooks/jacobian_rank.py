@@ -221,7 +221,10 @@ def plot_colormap(data, filename, d0, set_cbar=True):
         # else:
         #     cp = plt.imshow(data, cmap=colormap, origin='lower', interpolation='nearest', vmax=100)
         #     cbar = fig.colorbar(cp)
-        cp = plt.imshow(data, cmap=colormap, origin='lower', interpolation='nearest', vmax=100)
+        if np.all(data[0][0] == data):
+            cp = plt.imshow(data, cmap=colormap, origin='lower', interpolation='nearest', vmin=90, vmax=100)
+        else:
+            cp = plt.imshow(data, cmap=colormap, origin='lower', interpolation='nearest', vmax=100)
         cbar = fig.colorbar(cp)
         cbar.ax.tick_params(length=6, width=2)
 
@@ -243,8 +246,8 @@ if __name__ == "__main__":
     	RUNS_NUM = 2
 
     	d0_arr = [10]#[1, 2, 5, 10, 50]
-    	d1_arr = [25 + 25 * (i) for i in range(40)]
-    	data_size_arr = [10 + 10 * (i) for i in range(40)]
+    	d1_arr = [25 + 25 * (i) for i in range(4)]
+    	data_size_arr = [10 + 10 * (i) for i in range(4)]
 
     	for d0 in d0_arr:
     	    total_zero_loss = []
