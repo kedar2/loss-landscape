@@ -18,7 +18,7 @@ class MLP(torch.nn.Module):
         self.layers.append(torch.nn.Linear(input_dim, hidden_dim))
         for _ in range(num_hidden_layers - 1):
             self.layers.append(torch.nn.Linear(hidden_dim, hidden_dim))
-        self.last_layer = torch.nn.Parameter(torch.randn(hidden_dim, output_dim)) # The last layer is frozen.
+        self.last_layer = torch.nn.Parameter(torch.randn(hidden_dim, output_dim), requires_grad=False) # The last layer is frozen.
         self.activations = []
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
